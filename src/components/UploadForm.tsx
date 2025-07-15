@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { uploadReport } from '../utils/api';
 import { Upload, CheckCircle, AlertCircle } from '@/components/icons';
 
@@ -12,10 +12,25 @@ const UploadForm: React.FC<UploadFormProps> = ({ onSuccess, onUploadSuccess }) =
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [redirectCountdown, setRedirectCountdown] = useState<number | null>(null);
+
+  // Countdown effect for redirect
+  useEffect(() => {
+    if (redirectCountdown !== null && redirectCountdown > 0) {
+      const timer = setTimeout(() => {
+        setRedirectCountdown(redirectCountdown - 1);
+      }, 1000);
+      return () => clearTimeout(timer);
+    } else if (redirectCountdown === 0) {
+      if (onSuccess) onSuccess();
+      if (onUploadSuccess) onUploadSuccess();
+    }
+  }, [redirectCountdown, onSuccess, onUploadSuccess]);
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     setError(null);
     setSuccess(null);
+    setRedirectCountdown(null);
     const file = e.target.files?.[0];
     if (!file) return;
     if (file.type !== 'application/json') {
@@ -26,8 +41,9 @@ const UploadForm: React.FC<UploadFormProps> = ({ onSuccess, onUploadSuccess }) =
     try {
       const res = await uploadReport(file);
       setSuccess(`Report uploaded successfully! ${res.violationsCount} violations processed.`);
-      if (onSuccess) onSuccess();
-      if (onUploadSuccess) onUploadSuccess();
+      
+      // Start countdown for redirect
+      setRedirectCountdown(3);
     } catch (err: any) {
       setError(err.message || 'Upload failed.');
     } finally {
@@ -87,9 +103,24 @@ const UploadForm: React.FC<UploadFormProps> = ({ onSuccess, onUploadSuccess }) =
           )}
 
           {success && (
-            <div className="flex items-center p-4 bg-green-50 border border-green-200 rounded-lg">
-              <CheckCircle className="h-5 w-5 text-green-600 mr-2" />
-              <span className="text-green-800">{success}</span>
+            <div className="flex flex-col items-center p-6 bg-green-50 border border-green-200 rounded-lg">
+              <div className="flex items-center mb-3">
+                <CheckCircle className="h-6 w-6 text-green-600 mr-2" />
+                <span className="text-green-800 font-medium">{success}</span>
+              </div>
+              {redirectCountdown !== null && (
+                <div className="text-center">
+                  <p className="text-green-700 text-sm mb-2">
+                    Redirecting to dashboard in {redirectCountdown} second{redirectCountdown !== 1 ? 's' : ''}...
+                  </p>
+                  <div className="w-32 bg-green-200 rounded-full h-2">
+                    <div 
+                      className="bg-green-600 h-2 rounded-full transition-all duration-1000" 
+                      style={{ width: `${((3 - redirectCountdown) / 3) * 100}%` }}
+                    ></div>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>
