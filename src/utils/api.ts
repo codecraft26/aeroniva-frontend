@@ -1,6 +1,6 @@
 import { Report, Violation, KPIResponse, FilterOptions, Filters, LoginRequest, RegisterRequest, AuthResponse, User } from './types';
 
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:8000/api';
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE || 'https://backend.otito.in/api';
 
 // Helper function to get auth token
 function getAuthToken(): string | null {
