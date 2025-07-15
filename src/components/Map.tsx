@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import Image from 'next/image';
 import { MapPin } from '@/components/icons';
 import { Violation } from '@/utils/types';
 
@@ -99,12 +100,16 @@ const Map: React.FC<MapProps> = ({ violations }) => {
                   <div><strong>Coords:</strong> {Number(violation.latitude).toFixed(6)}, {Number(violation.longitude).toFixed(6)}</div>
                 </div>
                 <div className="mt-2">
-                  <img 
-                    src={violation.image_url} 
-                    alt="Evidence" 
-                    className="w-full h-16 object-cover rounded border"
-                    onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
-                  />
+                  <div className="w-full h-16 relative overflow-hidden rounded border">
+                    <Image 
+                      src={violation.image_url} 
+                      alt="Evidence" 
+                      fill
+                      className="object-cover"
+                      onError={() => {}}
+                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                    />
+                  </div>
                 </div>
                 {/* Arrow pointing down */}
                 <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-white"></div>

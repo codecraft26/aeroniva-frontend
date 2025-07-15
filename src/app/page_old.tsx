@@ -1,30 +1,23 @@
 'use client';
 
-import { useState, useEffect, useCallback, Suspense } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useState, useEffect, useCallback } from 'react';
 import { Upload, BarChart3, Map, Filter, AlertTriangle, LogOut, User } from '@/components/icons';
 import UploadForm from '@/components/UploadForm';
 import Dashboard from '@/components/Dashboard';
 import MapView from '@/components/MapView';
 import TableView from '@/components/TableView';
+import AuthWrapper from '@/components/AuthWrapper';
 import { useAuth } from '@/contexts/AuthContext';
 import { KPIData, Violation } from '@/utils/types';
 import { api } from '@/utils/api';
 
 type ActiveTab = 'upload' | 'dashboard' | 'map' | 'table';
 
-function DashboardContent() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const { isAuthenticated, loading, user, logout } = useAuth();
-  
-  // Get initial tab from URL params, default to 'upload'
-  const initialTab = (searchParams.get('tab') as ActiveTab) || 'upload';
-  const [activeTab, setActiveTab] = useState<ActiveTab>(initialTab);
-  
+function MainApp() {
+  const [activeTab, setActiveTab] = useState<ActiveTab>('upload');
   const [kpiData, setKpiData] = useState<KPIData | null>(null);
   const [violations, setViolations] = useState<Violation[]>([]);
-  const [dataLoading, setDataLoading] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [filters, setFilters] = useState({
     droneId: '',
@@ -32,26 +25,11 @@ function DashboardContent() {
     type: ''
   });
   const [showUserMenu, setShowUserMenu] = useState(false);
-
-  // Redirect to login if not authenticated
-  useEffect(() => {
-    if (!loading && !isAuthenticated) {
-      router.replace('/login');
-    }
-  }, [isAuthenticated, loading, router]);
-
-  // Update URL when tab changes
-  useEffect(() => {
-    if (isAuthenticated && !loading) {
-      const url = new URL(window.location.href);
-      url.searchParams.set('tab', activeTab);
-      window.history.replaceState({}, '', url.toString());
-    }
-  }, [activeTab, isAuthenticated, loading]);
+  const { user, logout } = useAuth();
 
   // Fetch data
   const fetchData = useCallback(async () => {
-    setDataLoading(true);
+    setLoading(true);
     setError(null);
     try {
       const [kpisResponse, violationsResponse] = await Promise.all([
@@ -64,15 +42,15 @@ function DashboardContent() {
       console.error('Error fetching data:', error);
       setError(error instanceof Error ? error.message : 'Failed to fetch data');
     } finally {
-      setDataLoading(false);
+      setLoading(false);
     }
   }, [filters]);
 
   useEffect(() => {
-    if (isAuthenticated && activeTab !== 'upload') {
+    if (activeTab !== 'upload') {
       fetchData();
     }
-  }, [activeTab, fetchData, isAuthenticated]);
+  }, [activeTab, fetchData]);
 
   const handleUploadSuccess = () => {
     fetchData();
@@ -82,14 +60,9 @@ function DashboardContent() {
   const handleLogout = async () => {
     try {
       await logout();
-      router.replace('/login');
     } catch (error) {
       console.error('Logout error:', error);
     }
-  };
-
-  const handleTabChange = (tabId: ActiveTab) => {
-    setActiveTab(tabId);
   };
 
   const tabs = [
@@ -98,21 +71,6 @@ function DashboardContent() {
     { id: 'map' as ActiveTab, label: 'Map View', icon: Map },
     { id: 'table' as ActiveTab, label: 'Table View', icon: Filter }
   ];
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="flex items-center space-x-3">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-          <span className="text-lg text-gray-700">Loading...</span>
-        </div>
-      </div>
-    );
-  }
-
-  if (!isAuthenticated) {
-    return null; // Will be redirected
-  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -171,7 +129,7 @@ function DashboardContent() {
               return (
                 <button
                   key={tab.id}
-                  onClick={() => handleTabChange(tab.id)}
+                  onClick={() => setActiveTab(tab.id)}
                   className={`flex items-center space-x-2 py-4 px-1 border-b-2 font-medium text-sm ${
                     activeTab === tab.id
                       ? 'border-blue-500 text-blue-600'
@@ -197,7 +155,7 @@ function DashboardContent() {
           </div>
         )}
 
-        {dataLoading && activeTab !== 'upload' && (
+        {loading && activeTab !== 'upload' && (
           <div className="flex items-center justify-center py-12">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
             <span className="ml-2 text-black">Loading...</span>
@@ -237,21 +195,10 @@ function DashboardContent() {
   );
 }
 
-function DashboardPageFallback() {
+export default function Home() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="flex items-center space-x-3">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-        <span className="text-lg text-gray-700">Loading Dashboard...</span>
-      </div>
-    </div>
-  );
-}
-
-export default function DashboardPage() {
-  return (
-    <Suspense fallback={<DashboardPageFallback />}>
-      <DashboardContent />
-    </Suspense>
+    <AuthWrapper>
+      <MainApp />
+    </AuthWrapper>
   );
 }

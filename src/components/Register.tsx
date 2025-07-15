@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 
 interface RegisterProps {
@@ -15,6 +16,7 @@ const Register: React.FC<RegisterProps> = ({ onSwitchToLogin }) => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const { register } = useAuth();
+  const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -34,6 +36,7 @@ const Register: React.FC<RegisterProps> = ({ onSwitchToLogin }) => {
 
     try {
       await register(username, email, password);
+      router.push('/dashboard');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Registration failed');
     } finally {

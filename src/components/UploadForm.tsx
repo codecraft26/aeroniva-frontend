@@ -1,4 +1,5 @@
 import React, { useRef, useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { uploadReport } from '../utils/api';
 import { Upload, CheckCircle, AlertCircle } from '@/components/icons';
 
@@ -13,6 +14,7 @@ const UploadForm: React.FC<UploadFormProps> = ({ onSuccess, onUploadSuccess }) =
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [redirectCountdown, setRedirectCountdown] = useState<number | null>(null);
+  const router = useRouter();
 
   // Countdown effect for redirect
   useEffect(() => {
@@ -24,8 +26,10 @@ const UploadForm: React.FC<UploadFormProps> = ({ onSuccess, onUploadSuccess }) =
     } else if (redirectCountdown === 0) {
       if (onSuccess) onSuccess();
       if (onUploadSuccess) onUploadSuccess();
+      // Also redirect via router if we're on a standalone page
+      router.push('/dashboard?tab=dashboard');
     }
-  }, [redirectCountdown, onSuccess, onUploadSuccess]);
+  }, [redirectCountdown, onSuccess, onUploadSuccess, router]);
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     setError(null);

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 
 interface LoginProps {
@@ -13,6 +14,7 @@ const Login: React.FC<LoginProps> = ({ onSwitchToRegister }) => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
+  const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -21,6 +23,7 @@ const Login: React.FC<LoginProps> = ({ onSwitchToRegister }) => {
 
     try {
       await login(email, password);
+      router.push('/dashboard');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Login failed');
     } finally {
