@@ -1,20 +1,19 @@
 'use client';
 
-import { useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
+import Login from '@/components/Login';
+import Register from '@/components/Register';
 
-export default function Home() {
+export default function LoginPage() {
   const { isAuthenticated, loading } = useAuth();
+  const [showRegister, setShowRegister] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
-    if (!loading) {
-      if (isAuthenticated) {
-        router.replace('/dashboard');
-      } else {
-        router.replace('/login');
-      }
+    if (!loading && isAuthenticated) {
+      router.replace('/dashboard');
     }
   }, [isAuthenticated, loading, router]);
 
@@ -29,5 +28,13 @@ export default function Home() {
     );
   }
 
-  return null;
+  if (isAuthenticated) {
+    return null; // Will be redirected
+  }
+
+  return showRegister ? (
+    <Register onSwitchToLogin={() => setShowRegister(false)} />
+  ) : (
+    <Login onSwitchToRegister={() => setShowRegister(true)} />
+  );
 }
