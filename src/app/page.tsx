@@ -1,103 +1,144 @@
-import Image from "next/image";
+'use client';
+
+import { useState, useEffect } from 'react';
+import { Upload, BarChart3, Map, Filter, AlertTriangle } from '@/components/icons';
+import UploadForm from '@/components/UploadForm';
+import Dashboard from '@/components/Dashboard';
+import MapView from '@/components/MapView';
+import TableView from '@/components/TableView';
+import { KPIData, Violation } from '@/utils/types';
+import { api } from '@/utils/api';
+
+type ActiveTab = 'upload' | 'dashboard' | 'map' | 'table';
 
 export default function Home() {
-  return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const [activeTab, setActiveTab] = useState<ActiveTab>('upload');
+  const [kpiData, setKpiData] = useState<KPIData | null>(null);
+  const [violations, setViolations] = useState<Violation[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [filters, setFilters] = useState({
+    droneId: '',
+    date: '',
+    type: ''
+  });
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+  // Fetch data
+  const fetchData = async () => {
+    setLoading(true);
+    try {
+      const [kpisResponse, violationsResponse] = await Promise.all([
+        api.getKPIs(filters),
+        api.getViolations(filters)
+      ]);
+      setKpiData(kpisResponse);
+      setViolations(violationsResponse);
+    } catch (error) {
+      console.error('Error fetching data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (activeTab !== 'upload') {
+      fetchData();
+    }
+  }, [activeTab, filters]);
+
+  const handleUploadSuccess = () => {
+    fetchData();
+    setActiveTab('dashboard');
+  };
+
+  const tabs = [
+    { id: 'upload' as ActiveTab, label: 'Upload Reports', icon: Upload },
+    { id: 'dashboard' as ActiveTab, label: 'Dashboard', icon: BarChart3 },
+    { id: 'map' as ActiveTab, label: 'Map View', icon: Map },
+    { id: 'table' as ActiveTab, label: 'Table View', icon: Filter }
+  ];
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <header className="bg-white shadow-sm border-b">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+            <div className="flex items-center space-x-3">
+              <AlertTriangle className="h-8 w-8 text-red-600" />
+              <h1 className="text-2xl font-bold text-black">
+                AI Analytics Dashboard
+              </h1>
+            </div>
+            <div className="text-sm text-black">
+              Drone Safety Monitoring System
+            </div>
+          </div>
         </div>
+      </header>
+
+      {/* Navigation Tabs */}
+      <nav className="bg-white border-b">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex space-x-8">
+            {tabs.map((tab) => {
+              const Icon = tab.icon;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`flex items-center space-x-2 py-4 px-1 border-b-2 font-medium text-sm ${
+                    activeTab === tab.id
+                      ? 'border-blue-500 text-blue-600'
+                      : 'border-transparent text-black hover:text-black hover:border-gray-300'
+                  }`}
+                >
+                  <Icon className="h-5 w-5" />
+                  <span>{tab.label}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      </nav>
+
+      {/* Main Content */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {loading && activeTab !== 'upload' && (
+          <div className="flex items-center justify-center py-12">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            <span className="ml-2 text-black">Loading...</span>
+          </div>
+        )}
+
+        {activeTab === 'upload' && (
+          <UploadForm onUploadSuccess={handleUploadSuccess} />
+        )}
+
+        {activeTab === 'dashboard' && kpiData && (
+          <Dashboard 
+            kpiData={kpiData} 
+            violations={violations}
+            filters={filters}
+            onFiltersChange={setFilters}
+          />
+        )}
+
+        {activeTab === 'map' && (
+          <MapView 
+            violations={violations}
+            filters={filters}
+            onFiltersChange={setFilters}
+          />
+        )}
+
+        {activeTab === 'table' && (
+          <TableView 
+            violations={violations}
+            filters={filters}
+            onFiltersChange={setFilters}
+          />
+        )}
       </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
     </div>
   );
 }
