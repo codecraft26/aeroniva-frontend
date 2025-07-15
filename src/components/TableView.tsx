@@ -33,7 +33,7 @@ const TableView: React.FC<TableViewProps> = ({ violations, filters, onFiltersCha
   // Filter violations based on search term
   const filteredViolations = violations.filter((violation) =>
     Object.values(violation).some((value) =>
-      value.toString().toLowerCase().includes(searchTerm.toLowerCase())
+      value != null && value.toString().toLowerCase().includes(searchTerm.toLowerCase())
     )
   );
 
