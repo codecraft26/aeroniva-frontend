@@ -29,6 +29,9 @@ const Map: React.FC<MapProps> = ({ violations }) => {
     return acc;
   }, {} as Record<string, number>);
 
+  // Generate a unique component ID to avoid key conflicts
+  const componentId = React.useId();
+
   return (
     <div className="w-full h-full bg-gray-100 relative overflow-hidden">
       {/* Map placeholder background */}
@@ -36,10 +39,10 @@ const Map: React.FC<MapProps> = ({ violations }) => {
         {/* Grid pattern to simulate map */}
         <div className="absolute inset-0 opacity-20">
           {Array.from({ length: 20 }).map((_, i) => (
-            <div key={`h-${i}`} className="absolute border-t border-gray-300" style={{ top: `${i * 5}%`, left: 0, right: 0 }} />
+            <div key={`${componentId}-h-${i}`} className="absolute border-t border-gray-300" style={{ top: `${i * 5}%`, left: 0, right: 0 }} />
           ))}
           {Array.from({ length: 20 }).map((_, i) => (
-            <div key={`v-${i}`} className="absolute border-l border-gray-300" style={{ left: `${i * 5}%`, top: 0, bottom: 0 }} />
+            <div key={`${componentId}-v-${i}`} className="absolute border-l border-gray-300" style={{ left: `${i * 5}%`, top: 0, bottom: 0 }} />
           ))}
         </div>
 
@@ -72,7 +75,7 @@ const Map: React.FC<MapProps> = ({ violations }) => {
           
           return (
             <div
-              key={violation.violation_id}
+              key={`map-violation-${violation.violation_id}-${index}`}
               className="absolute transform -translate-x-1/2 -translate-y-1/2 cursor-pointer group"
               style={{
                 left: `${Math.max(5, Math.min(95, x))}%`,

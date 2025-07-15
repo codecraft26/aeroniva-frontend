@@ -221,8 +221,8 @@ const TableView: React.FC<TableViewProps> = ({ violations, filters, onFiltersCha
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {sortedViolations.map((violation) => (
-                <tr key={violation.violation_id} className="hover:bg-gray-50">
+              {sortedViolations.map((violation, index) => (
+                <tr key={`table-violation-${violation.violation_id}-${index}`} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                     {violation.violation_id}
                   </td>

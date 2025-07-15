@@ -166,8 +166,8 @@ const Dashboard: React.FC<DashboardProps> = ({ kpiData, violations, filters, onF
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {violations.slice(0, 10).map((violation) => (
-                <tr key={violation.violation_id}>
+              {violations.slice(0, 10).map((violation, index) => (
+                <tr key={`dashboard-violation-${violation.violation_id}-${index}`}>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                     {violation.violation_id}
                   </td>
